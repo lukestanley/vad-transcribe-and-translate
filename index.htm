@@ -1,0 +1,37 @@
+<script src="ort.js"></script>
+<script src="bundle.min.js"></script>
+<script>
+  // From https://github.com/ricky0123/vad/
+  async function main() {
+    const myvad = await vad.MicVAD.new({
+      onSpeechStart: () => {
+        console.log("Speech start detected");
+      },
+      onSpeechEnd: async (audio) => {
+        console.log('Speech end');
+        const wavBuffer = vad.utils.encodeWAV(audio);
+        const base64 = vad.utils.arrayBufferToBase64(wavBuffer);
+        const response = await fetch('/transcribe/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ audio: `data:audio/wav;base64,${base64}` }),
+        });
+        const result = await response.json();
+        console.dir(result);
+        const transcribedText = result.enriched;
+        let p = document.createElement("p");
+        p.textContent = transcribedText;
+        document.body.insertBefore(p, document.body.firstChild);
+
+
+      }
+    })
+    myvad.start()
+  }
+  console.clear()
+  main()
+</script>
+<body>
+</body>
